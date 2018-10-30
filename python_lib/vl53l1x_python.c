@@ -53,7 +53,8 @@ static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasur
 VL53L1_Dev_t* initialise(uint8_t i2c_address)
 /* VL53L1_Dev_t* initialise(uint8_t i2c_address[], uint8_t n_i2c_address)*/
 {
-
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
     VL53L1_Dev_t *dev = (VL53L1_Dev_t *) malloc(sizeof(VL53L1_Dev_t));
     memset(dev, 0, sizeof(VL53L1_Dev_t));
 
@@ -80,7 +81,7 @@ VL53L1_Dev_t* initialise(uint8_t i2c_address)
 
 VL53L1_Error setDeviceAddress(VL53L1_Dev_t *dev, int i2c_address)
 {
-    printf("Set addr: %x\n", i2c_address);
+    printf("Set addr: 0x%x\n", i2c_address);
     VL53L1_Error Status = VL53L1_SetDeviceAddress(dev, i2c_address << 1);
     dev->I2cDevAddr = i2c_address;
     try_command( &VL53L1_DataInit, dev, "Calling DataInit...");
