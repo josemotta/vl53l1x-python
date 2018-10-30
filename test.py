@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(0,"build/lib.linux-armv7l-2.7/")
-
-import VL53L1X
+from python import VL53L1X
 import time
 from datetime import datetime
 
@@ -12,10 +9,12 @@ print("Python: Initialized")
 tof.open()
 print("Python: Opened")
 
+
 tof.start_ranging(1)
 
 try:
-    while True:
+    for _ in range(0,3):
+
         distance_mm = tof.get_distance()
         print("Time: {} Distance: {}mm".format(datetime.utcnow().strftime("%S.%f"), distance_mm))
         time.sleep(0.001)

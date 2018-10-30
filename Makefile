@@ -1,19 +1,28 @@
-.PHONY: clean lib
+BUILD_DIR = ./build/
+DEFINES = -D VL53L1_DEBUG=1 -D PAL_EXTENDED=1
+WARNINGS = -Wno-implicit-function-declaration
+CFLAGS = -ggdb
+INCLUDES = -Iapi/core -Iapi/platform
+OBJECTS = api/core/*c api/platform/*c python_lib/vl53l1x_python.c
+SO = python/vl53l1x_python.so
 
-SRC = api
-LIB = libvl53l1_api.a
-LDFLAGS :=
-CFLAGS := -Iapi/core -Iapi/platform -std=c99
+COMPILE_LOG = compile.log
+TEST_LOG = compile.tst
 
-SRC_FILES := $(wildcard $(SRC)/*/*.c)
-SRC_FILES := $(wildcard $(SRC)/*/*.c)
-OBJ_FILES := $(patsubst $(SRC)/*/*.c,$(SRC)/*/%.o,$(SRC_FILES))
 
-$(LIB): $(OBJ_FILES)
-	$(CC) $(LDFLAGS) $(CFLAGS) -fPIC -shared -o $@ $^
+all: compile link test
 
-$(SRC)/%.o: $(SRC)/%.c
-	$(CC) $(LDFLAGS) $(CFLAGS) -c -o $@ $<
+test:
+	objdump -t $(SO) | grep initialise | tee $(TEST_LOG)
+	python test.py | tee -a $(TEST_LOG)
 
-test: test.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -Lvl53l1_api -o test test.c
+link:
+	#echo TODO
+
+compile:
+	echo "" | tee $(COMPILE_LOG)
+	[ -d $(BUILD_DIR) ] || mkdir $(BUILD_DIR) 2>&1 | tee $(COMPILE_LOG)
+	gcc $(DEFINES) $(WARNINGS) $(CFLAGS) $(INCLUDES) $(OBJECTS) -shared -o $(SO) 2>&1 | tee -a $(COMPILE_LOG)
+
+tail:
+	multitail -f -cS attila_log $(COMPILE_LOG) $(TEST_LOG)
