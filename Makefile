@@ -15,6 +15,7 @@ all: compile link test
 test:
 	objdump -t $(SO) | grep initialise | tee $(TEST_LOG)
 	python test.py | tee -a $(TEST_LOG)
+	echo Done | tee -a $(TEST_LOG)
 
 link:
 	#echo TODO
@@ -23,6 +24,7 @@ compile:
 	echo "" | tee $(COMPILE_LOG)
 	[ -d $(BUILD_DIR) ] || mkdir $(BUILD_DIR) 2>&1 | tee $(COMPILE_LOG)
 	gcc $(DEFINES) $(WARNINGS) $(CFLAGS) $(INCLUDES) $(OBJECTS) -shared -o $(SO) 2>&1 | tee -a $(COMPILE_LOG)
+	echo Done | tee -a $(COMPILE_LOG)
 
 tail:
-	multitail -f -cS attila_log $(COMPILE_LOG) $(TEST_LOG)
+	multitail -CS attila_log $(COMPILE_LOG) $(TEST_LOG)
