@@ -1,4 +1,5 @@
-BUILD_DIR = ./build/
+.PHONY: test tail
+
 DEFINES = -D VL53L1_DEBUG=0 -D PAL_EXTENDED=1
 WARNINGS = -Wno-implicit-function-declaration
 CFLAGS = -ggdb
@@ -9,22 +10,18 @@ SO = python/vl53l1x_python.so
 COMPILE_LOG = compile.log
 TEST_LOG = test.log
 
-
 all: $(SO) test
 
 test:
 	objdump -t $(SO) | grep initialise | tee $(TEST_LOG)
-	python test.py 2>&1 | tee -a $(TEST_LOG)
+	python test/change_address.py 2>&1 | tee -a $(TEST_LOG)
 	echo Done | tee -a $(TEST_LOG)
-
-link:
-	#echo TODO
 
 $(SO): $(OBJECTS)
 	echo "" | tee $(COMPILE_LOG)
-	[ -d $(BUILD_DIR) ] || mkdir $(BUILD_DIR) 2>&1 | tee $(COMPILE_LOG)
 	gcc $(DEFINES) $(WARNINGS) $(CFLAGS) $(INCLUDES) $(OBJECTS) -shared -o $(SO) 2>&1 | tee -a $(COMPILE_LOG)
 	echo Done | tee -a $(COMPILE_LOG)
 
 tail:
-	multitail -CS attila_log $(COMPILE_LOG) $(TEST_LOG)
+	multitail -F .multitailrc -CS vl53l1 $(COMPILE_LOG) $(TEST_LOG)
+

@@ -36,6 +36,7 @@ SOFTWARE.
 // Headers
 static void try_command(VL53L1_Error (*) ( VL53L1_Dev_t *), VL53L1_Dev_t*, char*);
 static void print_device_info(VL53L1_Dev_t*);
+extern VL53L1_Error setDeviceAddress(VL53L1_Dev_t*, int);
 
 static VL53L1_RangingMeasurementData_t RangingMeasurementData;
 static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
@@ -50,16 +51,20 @@ static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasur
  * @retval  The Dev Object to pass to other library functions.
  *****************************************************************************/
 VL53L1_Dev_t* initialise(uint8_t i2c_address)
+/* VL53L1_Dev_t* initialise(uint8_t i2c_address[], uint8_t n_i2c_address)*/
 {
 
     VL53L1_Dev_t *dev = (VL53L1_Dev_t *) malloc(sizeof(VL53L1_Dev_t));
     memset(dev, 0, sizeof(VL53L1_Dev_t));
 
-    dev->I2cDevAddr = i2c_address;
+    // Default address
+    dev->I2cDevAddr = 0x29;
+
     try_command( &VL53L1_software_reset, dev, "Calling software_reset...");
     try_command( &VL53L1_WaitDeviceBooted, dev, "Calling WaitDeviceBooted...");
-    try_command( &VL53L1_DataInit, dev, "Calling DataInit...");
-    try_command( &VL53L1_StaticInit, dev, "Calling StaticInit...");
+
+    // Change to defined address
+    setDeviceAddress( dev, i2c_address );
 
 #ifdef VL53L1_DEBUG
     if (VL53L1_DEBUG == 1) print_device_info(dev);
@@ -75,9 +80,11 @@ VL53L1_Dev_t* initialise(uint8_t i2c_address)
 
 VL53L1_Error setDeviceAddress(VL53L1_Dev_t *dev, int i2c_address)
 {
-    printf("Set addr: %x", i2c_address);
+    printf("Set addr: %x\n", i2c_address);
     VL53L1_Error Status = VL53L1_SetDeviceAddress(dev, i2c_address << 1);
     dev->I2cDevAddr = i2c_address;
+    try_command( &VL53L1_DataInit, dev, "Calling DataInit...");
+    try_command( &VL53L1_StaticInit, dev, "Calling StaticInit...");
     return Status;
 }
 

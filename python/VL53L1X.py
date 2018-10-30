@@ -72,7 +72,7 @@ class VL53L1X:
     def __init__(self, i2c_bus=1, i2c_address=0x29, tca9548a_num=255, tca9548a_addr=0):
         """Initialize the VL53L1X ToF Sensor from ST"""
         self._i2c_bus = i2c_bus
-        self.i2c_address = i2c_address
+        self.i2c_address = c_uint8(i2c_address);
         self._tca9548a_num = tca9548a_num
         self._tca9548a_addr = tca9548a_addr
         self._i2c = SMBus(1)
@@ -101,11 +101,15 @@ class VL53L1X:
             msg_w = i2c_msg.write(address, [reg >> 8, reg & 0xff])
             msg_r = i2c_msg.read(address, length)
 
-            self._i2c.i2c_rdwr(msg_w, msg_r)
+            try:
+                self._i2c.i2c_rdwr(msg_w, msg_r)
+            except:
+                print("Cannot read on 0x%x I2C bus" % address)
 
             if ret_val == 0:
                 for index in range(length):
                     data_p[index] = ord(msg_r.buf[index])
+
 
             return ret_val
 
@@ -119,7 +123,10 @@ class VL53L1X:
 
             msg_w = i2c_msg.write(address, [reg >> 8, reg & 0xff] + data)
 
-            self._i2c.i2c_rdwr(msg_w)
+            try:
+                self._i2c.i2c_rdwr(msg_w)
+            except:
+                print("Cannot write on 0x%x I2C bus" % address)
 
             return ret_val
 
@@ -153,3 +160,5 @@ class VL53L1X:
 
     def change_address(self, new_address):
         _TOF_LIBRARY.setDeviceAddress(self._dev, new_address)
+        self.i2c_address = new_address
+        self._configure_i2c_library_functions()
