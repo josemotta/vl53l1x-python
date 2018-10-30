@@ -45,7 +45,7 @@ static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasur
  *              being used. If not being used, set to 0.
  * @retval  The Dev Object to pass to other library functions.
  *****************************************************************************/
-VL53L1_DEV *initialise(uint8_t i2c_address)
+VL53L1_Dev_t* initialise(uint8_t i2c_address)
 {
     VL53L1_Error Status = VL53L1_ERROR_NONE;
     uint32_t refSpadCount;
@@ -140,7 +140,7 @@ int32_t getDistance(VL53L1_Dev_t *dev)
 /******************************************************************************
  * @brief   Stop Ranging
  *****************************************************************************/
-void stopRanging(VL53L1_Dev_t *dev)
+VL53L1_Error stopRanging(VL53L1_Dev_t *dev)
 {
     return VL53L1_StopMeasurement(dev);
 }
