@@ -10,17 +10,17 @@ COMPILE_LOG = compile.log
 TEST_LOG = test.log
 
 
-all: compile link test
+all: $(SO) test
 
 test:
 	objdump -t $(SO) | grep initialise | tee $(TEST_LOG)
-	python test.py | tee -a $(TEST_LOG)
+	python test.py 2>&1 | tee -a $(TEST_LOG)
 	echo Done | tee -a $(TEST_LOG)
 
 link:
 	#echo TODO
 
-compile:
+$(SO): $(OBJECTS)
 	echo "" | tee $(COMPILE_LOG)
 	[ -d $(BUILD_DIR) ] || mkdir $(BUILD_DIR) 2>&1 | tee $(COMPILE_LOG)
 	gcc $(DEFINES) $(WARNINGS) $(CFLAGS) $(INCLUDES) $(OBJECTS) -shared -o $(SO) 2>&1 | tee -a $(COMPILE_LOG)
