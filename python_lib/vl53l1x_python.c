@@ -33,6 +33,10 @@ SOFTWARE.
 #include "vl53l1_api.h"
 #include "vl53l1_platform.h"
 
+// Headers
+static void try_command(VL53L1_Error (*) ( VL53L1_Dev_t *), VL53L1_Dev_t*, char*);
+static void print_device_info(VL53L1_Dev_t*);
+
 static VL53L1_RangingMeasurementData_t RangingMeasurementData;
 static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
 
@@ -47,38 +51,24 @@ static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasur
  *****************************************************************************/
 VL53L1_Dev_t* initialise(uint8_t i2c_address)
 {
-    VL53L1_Error Status = VL53L1_ERROR_NONE;
-    uint32_t refSpadCount;
-    uint8_t isApertureSpads;
-    uint8_t VhvSettings;
-    uint8_t PhaseCal;
-    VL53L1_Version_t                   Version;
-    VL53L1_Version_t                  *pVersion   = &Version;
-    VL53L1_DeviceInfo_t                DeviceInfo;
-    int32_t status_int;
 
-    VL53L1_Dev_t *dev = (VL53L1_Dev_t *)malloc(sizeof(VL53L1_Dev_t));
+    VL53L1_Dev_t *dev = (VL53L1_Dev_t *) malloc(sizeof(VL53L1_Dev_t));
     memset(dev, 0, sizeof(VL53L1_Dev_t));
 
     dev->I2cDevAddr = i2c_address;
-    Status = VL53L1_software_reset(dev);
-    Status = VL53L1_WaitDeviceBooted(dev);
-    Status = VL53L1_DataInit(dev);
-    Status = VL53L1_StaticInit(dev);
-    //if(Status == VL53L1_ERROR_NONE){
-        Status = VL53L1_GetDeviceInfo(dev, &DeviceInfo);
-        if(Status == VL53L1_ERROR_NONE){
-            printf("VL53L0X_GetDeviceInfo:\n");
-            printf("Device Name : %s\n", DeviceInfo.Name);
-            printf("Device Type : %s\n", DeviceInfo.Type);
-            printf("Device ID : %s\n", DeviceInfo.ProductId);
-            printf("ProductRevisionMajor : %d\n", DeviceInfo.ProductRevisionMajor);
-            printf("ProductRevisionMinor : %d\n", DeviceInfo.ProductRevisionMinor);
-        }
-    //}
+    try_command( &VL53L1_software_reset, dev, "Calling software_reset...");
+    try_command( &VL53L1_WaitDeviceBooted, dev, "Calling WaitDeviceBooted...");
+    try_command( &VL53L1_DataInit, dev, "Calling DataInit...");
+    try_command( &VL53L1_StaticInit, dev, "Calling StaticInit...");
 
-    VL53L1_PerformRefSpadManagement(dev);
-    VL53L1_SetXTalkCompensationEnable(dev, 0); // Disable crosstalk compensation (bare sensor)
+#ifdef VL53L1_DEBUG
+    if (VL53L1_DEBUG == 1) print_device_info(dev);
+#endif
+
+    try_command(&VL53L1_PerformRefSpadManagement, dev, "Calling PerformRefSpadManagement");
+
+    // Disable crosstalk compensation (bare sensor)
+    VL53L1_SetXTalkCompensationEnable(dev, 0);
 
     return dev;
 }
@@ -143,4 +133,33 @@ int32_t getDistance(VL53L1_Dev_t *dev)
 VL53L1_Error stopRanging(VL53L1_Dev_t *dev)
 {
     return VL53L1_StopMeasurement(dev);
+}
+
+// Source
+void try_command(VL53L1_Error (*command) ( VL53L1_Dev_t *), VL53L1_Dev_t* dev, char* print_text) {
+    printf(print_text);
+
+    VL53L1_Error error_code = VL53L1_ERROR_NONE;
+    while (error_code = command(dev)) {
+        char error_string[100] ;
+        VL53L1_get_pal_error_string(error_code, error_string);
+        printf("\nError: %s", error_string);
+        sleep(1);
+    }
+    printf("\tDone\n");
+}
+
+void print_device_info(VL53L1_Dev_t *dev)
+{
+    VL53L1_DeviceInfo_t DeviceInfo;
+    VL53L1_Error Status = VL53L1_GetDeviceInfo(dev, &DeviceInfo);
+
+    if(Status == VL53L1_ERROR_NONE ){
+        printf("VL53L0X_GetDeviceInfo:\n");
+        printf("Device Name : %s\n", DeviceInfo.Name);
+        printf("Device Type : %s\n", DeviceInfo.Type);
+        printf("Device ID : %s\n", DeviceInfo.ProductId);
+        printf("ProductRevisionMajor : %d\n", DeviceInfo.ProductRevisionMajor);
+        printf("ProductRevisionMinor : %d\n", DeviceInfo.ProductRevisionMinor);
+    }
 }

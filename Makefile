@@ -1,5 +1,5 @@
 BUILD_DIR = ./build/
-DEFINES = -D VL53L1_DEBUG=1 -D PAL_EXTENDED=1
+DEFINES = -D VL53L1_DEBUG=0 -D PAL_EXTENDED=1
 WARNINGS = -Wno-implicit-function-declaration
 CFLAGS = -ggdb
 INCLUDES = -Iapi/core -Iapi/platform
