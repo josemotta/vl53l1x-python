@@ -7,7 +7,7 @@ OBJECTS = api/core/*c api/platform/*c python_lib/vl53l1x_python.c
 SO = python/vl53l1x_python.so
 
 COMPILE_LOG = compile.log
-TEST_LOG = compile.tst
+TEST_LOG = test.log
 
 
 all: compile link test
