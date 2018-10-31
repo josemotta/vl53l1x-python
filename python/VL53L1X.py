@@ -21,7 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ctypes import CDLL, CFUNCTYPE, POINTER, c_int, c_uint, pointer, c_ubyte, c_uint8, c_uint32
+from ctypes import CDLL, CFUNCTYPE, POINTER, c_int, pointer, c_ubyte, c_uint8
 from smbus2 import SMBus, i2c_msg
 import os
 import site
@@ -69,14 +69,13 @@ else:
 
 class VL53L1X:
     """VL53L1X ToF."""
-    def __init__(self, i2c_bus=1, i2c_address=0x29, tca9548a_num=255, tca9548a_addr=0):
+    def __init__(self, i2c_bus=1):
         """Initialize the VL53L1X ToF Sensor from ST"""
         self._i2c_bus = i2c_bus
-        self.i2c_address = c_uint8(i2c_address);
-        self._tca9548a_num = tca9548a_num
-        self._tca9548a_addr = tca9548a_addr
         self._i2c = SMBus(1)
-        self._dev = None
+        self._default_dev = None
+        self._dev_list = None
+
         # Resgiter Address
         self.ADDR_UNIT_ID_HIGH = 0x16 # Serial number high byte
         self.ADDR_UNIT_ID_LOW = 0x17 # Serial number low byte
@@ -87,11 +86,17 @@ class VL53L1X:
     def open(self):
         self._i2c.open(bus=self._i2c_bus)
         self._configure_i2c_library_functions()
-        self._dev = _TOF_LIBRARY.initialise(self.i2c_address)
+        self._default_dev = _TOF_LIBRARY.initialise()
+        self._dev_list = dict()
+
+    def add_sensor(self, sensor_id, address):
+        self._dev_list[sensor_id] = _TOF_LIBRARY.copy_dev(self._default_dev)
+        _TOF_LIBRARY.init_dev(self._dev_list[sensor_id], c_uint8(address))
 
     def close(self):
         self._i2c.close()
-        self._dev = None
+        self._default_dev = None
+        self._dev_list = None
 
     def _configure_i2c_library_functions(self):
         # I2C bus read callback for low level library.
@@ -101,10 +106,11 @@ class VL53L1X:
             msg_w = i2c_msg.write(address, [reg >> 8, reg & 0xff])
             msg_r = i2c_msg.read(address, length)
 
+            # print("R: a: %x\tr:%d" % (address,reg))
             try:
                 self._i2c.i2c_rdwr(msg_w, msg_r)
             except:
-                print("Cannot read on 0x%x I2C bus" % address)
+                print("Cannot read on 0x%x I2C bus, reg: %d" % (address,reg))
 
             if ret_val == 0:
                 for index in range(length):
@@ -122,11 +128,12 @@ class VL53L1X:
                 data.append(data_p[index])
 
             msg_w = i2c_msg.write(address, [reg >> 8, reg & 0xff] + data)
+            # print("W: a: %x\tr:%d" % (address,reg))
 
             try:
                 self._i2c.i2c_rdwr(msg_w)
             except:
-                print("Cannot write on 0x%x I2C bus" % address)
+                print("Cannot write on 0x%x I2C bus, reg: %d" % (address, reg))
 
             return ret_val
 
@@ -135,30 +142,25 @@ class VL53L1X:
         self._i2c_write_func = _I2C_WRITE_FUNC(_i2c_write)
         _TOF_LIBRARY.VL53L1_set_i2c(self._i2c_read_func, self._i2c_write_func)
 
-    def start_ranging(self, mode=VL53L1xDistanceMode.LONG):
+    def start_ranging(self, sensor_id, mode=VL53L1xDistanceMode.LONG):
         """Start VL53L1X ToF Sensor Ranging"""
-        _TOF_LIBRARY.startRanging(self._dev, mode)
+        dev = self._dev_list[sensor_id]
+        _TOF_LIBRARY.startRanging(dev, mode)
 
-    def stop_ranging(self):
+    def stop_ranging(self, sensor_id):
         """Stop VL53L1X ToF Sensor Ranging"""
-        _TOF_LIBRARY.stopRanging(self._dev)
+        dev = self._dev_list[sensor_id]
+        _TOF_LIBRARY.stopRanging(dev)
 
-    def get_distance(self):
-        """Get distance from VL53L1X ToF Sensor"""
-        return _TOF_LIBRARY.getDistance(self._dev)
+    def get_distance(self, sensor_id):
+        dev = self._dev_list[sensor_id]
+        return _TOF_LIBRARY.getDistance(dev)
 
-    # This function included to show how to access the ST library directly
-    # from python instead of through the simplified interface
-    def get_timing(self):
-        budget = c_uint(0)
-        budget_p = pointer(budget)
-        status = _TOF_LIBRARY.VL53L1_GetMeasurementTimingBudgetMicroSeconds(self._dev, budget_p)
-        if status == 0:
-            return budget.value + 1000
-        else:
-            return 0
+    def get_address(self, sensor_id):
+        dev = self._dev_list[sensor_id]
+        return _TOF_LIBRARY.get_address(dev)
 
-    def change_address(self, new_address):
-        _TOF_LIBRARY.setDeviceAddress(self._dev, new_address)
-        self.i2c_address = new_address
-        self._configure_i2c_library_functions()
+    def change_address(self, sensor_id, new_address):
+        dev = self._dev_list[sensor_id]
+        _TOF_LIBRARY.setDeviceAddress(dev, new_address)
+

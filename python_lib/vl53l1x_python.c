@@ -33,10 +33,7 @@ SOFTWARE.
 #include "vl53l1_api.h"
 #include "vl53l1_platform.h"
 
-// Headers
-static void try_command(VL53L1_Error (*) ( VL53L1_Dev_t *), VL53L1_Dev_t*, char*);
-static void print_device_info(VL53L1_Dev_t*);
-extern VL53L1_Error setDeviceAddress(VL53L1_Dev_t*, int);
+#include "vl53l1x_python.h"
 
 static VL53L1_RangingMeasurementData_t RangingMeasurementData;
 static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
@@ -50,13 +47,12 @@ static VL53L1_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasur
  *              being used. If not being used, set to 0.
  * @retval  The Dev Object to pass to other library functions.
  *****************************************************************************/
-VL53L1_Dev_t* initialise(uint8_t i2c_address)
-/* VL53L1_Dev_t* initialise(uint8_t i2c_address[], uint8_t n_i2c_address)*/
+VL53L1_Dev_t* initialise()
 {
+    // Flush stdout and stderr to get the print instantly
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
-    VL53L1_Dev_t *dev = (VL53L1_Dev_t *) malloc(sizeof(VL53L1_Dev_t));
-    memset(dev, 0, sizeof(VL53L1_Dev_t));
+    VL53L1_Dev_t *dev = allocate_VL53L1_Dev_t();
 
     // Default address
     dev->I2cDevAddr = 0x29;
@@ -64,24 +60,12 @@ VL53L1_Dev_t* initialise(uint8_t i2c_address)
     try_command( &VL53L1_software_reset, dev, "Calling software_reset...");
     try_command( &VL53L1_WaitDeviceBooted, dev, "Calling WaitDeviceBooted...");
 
-    // Change to defined address
-    setDeviceAddress( dev, i2c_address );
-
-#ifdef VL53L1_DEBUG
-    if (VL53L1_DEBUG == 1) print_device_info(dev);
-#endif
-
-    try_command(&VL53L1_PerformRefSpadManagement, dev, "Calling PerformRefSpadManagement");
-
-    // Disable crosstalk compensation (bare sensor)
-    VL53L1_SetXTalkCompensationEnable(dev, 0);
-
     return dev;
 }
 
-VL53L1_Error setDeviceAddress(VL53L1_Dev_t *dev, int i2c_address)
+VL53L1_Error setDeviceAddress(VL53L1_Dev_t *dev, uint8_t i2c_address)
 {
-    printf("Set addr: 0x%x\n", i2c_address);
+    printf("Set address from 0x%x to 0x%x\n", dev->I2cDevAddr, i2c_address);
     VL53L1_Error Status = VL53L1_SetDeviceAddress(dev, i2c_address << 1);
     dev->I2cDevAddr = i2c_address;
     try_command( &VL53L1_DataInit, dev, "Calling DataInit...");
@@ -143,7 +127,6 @@ VL53L1_Error stopRanging(VL53L1_Dev_t *dev)
     return VL53L1_StopMeasurement(dev);
 }
 
-// Source
 void try_command(VL53L1_Error (*command) ( VL53L1_Dev_t *), VL53L1_Dev_t* dev, char* print_text) {
     printf(print_text);
 
@@ -170,4 +153,33 @@ void print_device_info(VL53L1_Dev_t *dev)
         printf("ProductRevisionMajor : %d\n", DeviceInfo.ProductRevisionMajor);
         printf("ProductRevisionMinor : %d\n", DeviceInfo.ProductRevisionMinor);
     }
+}
+
+VL53L1_Dev_t* allocate_VL53L1_Dev_t(void) {
+    VL53L1_Dev_t* dev = (VL53L1_Dev_t *) calloc(1, sizeof(VL53L1_Dev_t));
+    return dev;
+}
+
+VL53L1_Dev_t* copy_dev(VL53L1_Dev_t* dev) {
+    VL53L1_Dev_t* new_dev = allocate_VL53L1_Dev_t();
+    memcpy(new_dev, dev, sizeof(VL53L1_Dev_t));
+    return new_dev;
+}
+
+void init_dev(VL53L1_Dev_t* dev, uint8_t i2c_address) {
+    setDeviceAddress( dev, i2c_address );
+
+    // Calibration
+    try_command(&VL53L1_PerformRefSpadManagement, dev, "Calling PerformRefSpadManagement");
+
+    // Disable crosstalk compensation (bare sensor)
+    VL53L1_SetXTalkCompensationEnable(dev, 0);
+
+#ifdef VL53L1_DEBUG
+    if (VL53L1_DEBUG == 1) print_device_info(dev);
+#endif
+}
+
+uint8_t get_address(VL53L1_Dev_t* dev) {
+    return dev->I2cDevAddr;
 }

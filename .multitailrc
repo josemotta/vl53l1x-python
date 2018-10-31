@@ -1,4 +1,4 @@
 colorscheme:vl53l1
-cs_re:blue:warning
-cs_re:red:error
-cs_re:green:Done
+cs_re:blue,,bold:warning
+cs_re:red,,bold:error
+cs_re:green,,bold:Done:

@@ -15,9 +15,10 @@ all: $(SO) test
 test:
 	objdump -t $(SO) | grep initialise | tee $(TEST_LOG)
 	python test/turn_off_gpio.py 2>&1 | tee -a $(TEST_LOG)
-	python test/change_address.py 41 16 2>&1 | tee -a $(TEST_LOG)
-	# python test/change_address.py 41 20 2>&1 | tee -a $(TEST_LOG)
-	# parallel python test/change_address.py ::: 40 39 :::+ 20 16  2>&1 | tee -a $(TEST_LOG)
+	python test/change_address.py 20 2>&1 | tee -a $(TEST_LOG)
+	python test/change_address.py 21 2>&1 | tee -a $(TEST_LOG)
+	python test/use_2_sensors.py 2>&1 | tee -a $(TEST_LOG)
+	python test/turn_off_gpio.py 2>&1 | tee -a $(TEST_LOG)
 	echo Done | tee -a $(TEST_LOG)
 
 $(SO): $(OBJECTS)
