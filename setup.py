@@ -21,10 +21,10 @@ extension = Extension(
              'api/platform/vl53l1_platform.c',
              'python_lib/vl53l1x_python.c'])
 
-setup(name='VL53L1X',
-      version='0.0.3',
+setup(name='VL53L1X2',
+      version='0.1.0',
       description='vl53l1x distance sensor driver for Raspberry Pi',
-      maintainer='Phil Howard',
+      maintainer='Phil Howard/Nagy Attila/Jose Motta',
       maintainer_email='phil@pimoroni.com',
       url='https://github.com/josemotta/vl53l1x-python',
       long_description=open('README.md').read() + "\n" + open('CHANGELOG.txt').read(),
