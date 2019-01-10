@@ -1,12 +1,12 @@
 # vl53l1x-python
 
-Python library for the VL53L1X Laser Ranger.
+Revised Python library for the VL53L1X Laser Ranger.
 
 # Installing
 
 ```
-sudo pip install smbus2
-sudo pip install vl53l1x2
+sudo pip3 install smbus2
+sudo pip3 install VL53L1X2
 ```
 
 # Usage
@@ -21,4 +21,5 @@ distance_in_mm = tof.get_distance() # Grab the range in mm
 tof.stop_ranging() # Stop ranging
 ```
 
-See examples for more advanced usage.
+See examples and tests for more advanced usage.
+
