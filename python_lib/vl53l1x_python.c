@@ -128,7 +128,7 @@ VL53L1_Error stopRanging(VL53L1_Dev_t *dev)
 }
 
 void try_command(VL53L1_Error (*command) ( VL53L1_Dev_t *), VL53L1_Dev_t* dev, char* print_text) {
-    printf(print_text);
+    /* printf(print_text); */
 
     VL53L1_Error error_code = VL53L1_ERROR_NONE;
     while (error_code = command(dev)) {

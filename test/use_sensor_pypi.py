@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from compiled_lib import VL53L1X
+import VL53L1X
 import time
 from datetime import datetime
 

@@ -6,7 +6,7 @@ Python library for the VL53L1X Laser Ranger.
 
 ```
 sudo pip install smbus2
-sudo pip install vl53l1x
+sudo pip install vl53l1x2
 ```
 
 # Usage
