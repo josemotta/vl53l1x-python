@@ -1,4 +1,4 @@
-0.0.2
+0.1.2
 -----
 
 * @josemotta ported it to python 3.6 as part of a homeassistant component.
