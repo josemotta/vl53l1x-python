@@ -22,7 +22,7 @@ extension = Extension(
              'python_lib/vl53l1x_python.c'])
 
 setup(name='VL53L1X2',
-      version='0.1.2',
+      version='0.1.4',
       description='vl53l1x distance sensor driver for Raspberry Pi',
       maintainer='Phil Howard/Nagy Attila/Jose Motta',
       maintainer_email='phil@pimoroni.com',
@@ -30,6 +30,6 @@ setup(name='VL53L1X2',
       long_description=open('README.md').read() + "\n" + open('CHANGELOG.txt').read(),
       ext_modules=[extension],
       package_dir={'': 'python'},
-      py_modules=['VL53L1X'],
+      py_modules=['VL53L1X2'],
       requires=['smbus2'],
       install_requires=['smbus2'])

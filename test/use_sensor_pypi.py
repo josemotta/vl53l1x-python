@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import VL53L1X
+import VL53L1X2
 import time
 from datetime import datetime
 
@@ -29,7 +29,7 @@ GPIO.output(SHUTX_PIN_1, GPIO.HIGH)
 time.sleep(0.01)
 
 # Init VL53L1X sensor
-tof = VL53L1X.VL53L1X()
+tof = VL53L1X2.VL53L1X()
 tof.open()
 tof.add_sensor(sensor_id_1, ADDRESS_1)
 
