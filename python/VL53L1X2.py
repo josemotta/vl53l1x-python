@@ -75,7 +75,8 @@ class VL53L1X:
         self._i2c = SMBus(1)
         self._default_dev = None
         self._dev_list = None
-        self.sample_ok = True
+        self._ok = True
+        self._distance = 0
 
         # Resgiter Address
         self.ADDR_UNIT_ID_HIGH = 0x16 # Serial number high byte
@@ -156,7 +157,7 @@ class VL53L1X:
     def get_distance(self, sensor_id):
         dev = self._dev_list[sensor_id]
         return _TOF_LIBRARY.getDistance(dev)
-
+        
     def get_address(self, sensor_id):
         dev = self._dev_list[sensor_id]
         return _TOF_LIBRARY.get_address(dev)
@@ -164,4 +165,18 @@ class VL53L1X:
     def change_address(self, sensor_id, new_address):
         dev = self._dev_list[sensor_id]
         _TOF_LIBRARY.setDeviceAddress(dev, new_address)
+
+    def update(self, sensor_id):
+        """Read raw distance for homeassistant"""
+        self._distance = self.get_distance(sensor_id)
+    
+    @property
+    def sample_ok(self):
+        """Return True for a valid measurement data."""
+        return self._ok and self._distance >= 0
+
+    @property
+    def distance(self):
+        """Distance in mm"""
+        return self._distance
 
