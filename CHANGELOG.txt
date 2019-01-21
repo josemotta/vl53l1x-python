@@ -1,14 +1,14 @@
-0.1.2
+0.1.5
 -----
 
-* @josemotta ported it to python 3.6 as part of a homeassistant component.
+* @josemotta ported to python 3.6 as part of homeassistant component development.
 
 Please see basic sample:
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['smbus2==0.2.2', 'VL53L1X2==0.1.2']
+REQUIREMENTS = ['smbus2==0.2.2', 'VL53L1X2==0.1.5']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
